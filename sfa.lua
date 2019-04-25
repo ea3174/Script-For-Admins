@@ -1,6 +1,6 @@
 script_name("SFA")
 script_description("/SFA - Основная команда.")
-script_version("1.3")
+script_version("1.4")
 script_author("Rickot")
 script_dependencies("SAMPFUNCS, SAMP")
 --[[Билиотеки которые будут применяться  после local и перед =, это локальная переменная...
