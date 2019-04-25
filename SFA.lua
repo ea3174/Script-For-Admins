@@ -1,6 +1,6 @@
 script_name("SFA")
 script_description("/SFA - Основная команда.")
-script_version("1.5")
+script_version("1.4")
 script_author("Rickot")
 script_dependencies("SAMPFUNCS, SAMP")
 --[[Билиотеки которые будут применяться  после local и перед =, это локальная переменная...
@@ -19,18 +19,17 @@ local mainwindow = imgui.ImBool(false)
 local encoding = require 'encoding'
 encoding.default = 'CP1251'
 u8 = encoding.UTF8
-sname = "{ffffff}* [SFA]:{00BFFF} "
 
 jstart = 1 -- jstart это воспроизводная текста при запуске..
 
 function main()
   	if not isSampLoaded() or not isSampfuncsLoaded() then return end
+		autoupdate("https://raw.githubusercontent.com/ea3174/Script-For-Admins/master/SFA.json", '['..string.upper(thisScript().name)..']: ', "http://vk.com/rickot")
 	while not isSampAvailable() do wait(1000) end
-	autoupdate("https://raw.githubusercontent.com/ea3174/Script-For-Admins/master/SFA.json", '['..string.upper(thisScript().name)..']: ', "http://vk.com/rickot")
 --   checkUpdate()
     -- По принту можно понять что ниже проверка сервера
     print("Проверка сервера...")
-    	if sampGetCurrentServerAddress() == "194.61.44.100" then
+    	if sampGetCurrentServerAddress() == "194.61.44.100" then -- Там где ip ставить его надо без порта ":7777"
     		gameServer = "Amazing MZ"
     		srv = 1
 	--[[elseif это как if выше ток доп к однуму else и end]]	elseif sampGetCurrentServerAddress() == "" then -- эт добавил шоб я мог его тестить
@@ -46,9 +45,9 @@ function main()
     	print("Проверка пройдена, сервер: "..tostring(gameServer))
 
  if jstart == 1 then-- отправляет сообщение в игровой чат
-    sampAddChatMessage("{ffffff}* [SFA{ffffff}]:{00BFFF} SFA для администрации Amazing ZM", -1)
-    sampAddChatMessage("{ffffff}* [SFA{ffffff}]:{00BFFF} Скрипт успешно запущен. - [/sfa].", -1)
-	sampAddChatMessage('{ffffff}* [SFA{ffffff}]:{00BFFF} Текущая версия: '..thisScript().version)
+    sampAddChatMessage("{ffffff}* [SFA{ffffff}]: {00BFFF}SFA для администрации Amazing ZM", -1)
+    sampAddChatMessage("{ffffff}* [SFA{ffffff}]: {00BFFF}Скрипт успешно запущен. - [/sfa].", -1)
+	sampAddChatMessage('{ffffff}* [SFA{ffffff}]: {00BFFF}Текущая версия: '..thisScript().version)
  elseif jstart == 2 then
     sampfuncsLog('{ffffff}* [{949055} SFA{ffffff}]: {949055}Текущая версия : '..thisScript().version)
   end
@@ -67,7 +66,6 @@ sampRegisterChatCommand("infclass", otvetinfclass)
 sampRegisterChatCommand("forum", otvetforum)
 sampRegisterChatCommand("nakazan", otvetnakazan)
 sampRegisterChatCommand("tut", tut)
-sampRegisterChatCommand("hz", otvethz)
 ---------------------Наказания для пидарасов-------------------
 sampRegisterChatCommand("cheat", cheat)
 sampRegisterChatCommand("capsosk", capsosk)
@@ -174,17 +172,6 @@ function otvetchist(param)
     sampSendChat('/ans '..id..' Не заметил нарушений от данного игрока.')
    else
     sampAddChatMessage('{ffffff}* [{0088ff}SFA]{ffffff}: Ответ "Нарушений не заметил". [/chist id]', -1)
-      end
-     end
-end
-
-function otvethz(param)
-  id = tonumber(param)
-  if param then
-    if id ~= nil then
-    sampSendChat('/ans '..id..' К сожалению, я не могу ответить на этот вопрос.')
-   else
-    sampAddChatMessage('{ffffff}* [{0088ff}SFA]{ffffff}: Ответ "Не могу ответь на этот вопрос". [/hz id]', -1)
       end
      end
 end
@@ -660,45 +647,63 @@ function sampGetPlayerIdByNickname(nick)
     for i = 0, 1000 do if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == tostring(nick) then return i end end
 end
 
------------------------------------- Автообновление -------------------------
-
-function ftext(message)
-    sampAddChatMessage(string.format('%s %s', sname, message), 0xffffff)
-end
 
 
-color = 0xffffff
+--------- автообновление -------------
 
-function checkUpdate()
-  local fpath = os.getenv('TEMP') .. '\\SFA.json'
-  downloadUrlToFile('https://raw.githubusercontent.com/ea3174/Script-For-Admins/master/SFA.json', fpath, function(id, status, p1, p2)
-    if status == dlstatus.STATUS_ENDDOWNLOADDATA then
-    local f = io.open(fpath, 'r')
-    if f then
-      local info = decodeJson(f:read('*a'))
-      updatelink = info.updateurl
-      if info and info.latest then
-        version = tonumber(info.latest)
-        if version > tonumber(thisScript().version) then
-          lua_thread.create(goupdate)
+
+function autoupdate(json_url, prefix, url)
+  local dlstatus = require('moonloader').download_status
+  local json = getWorkingDirectory() .. '\\'..thisScript().name..'-version.json'
+  if doesFileExist(json) then os.remove(json) end
+  downloadUrlToFile(json_url, json,
+    function(id, status, p1, p2)
+      if status == dlstatus.STATUSEX_ENDDOWNLOAD then
+        if doesFileExist(json) then
+          local f = io.open(json, 'r')
+          if f then
+            local info = decodeJson(f:read('*a'))
+            updatelink = info.updateurl
+            updateversion = info.latest
+            f:close()
+            os.remove(json)
+            if updateversion ~= thisScript().version then
+              lua_thread.create(function(prefix)
+                local dlstatus = require('moonloader').download_status
+                local color = -1
+                sampAddChatMessage((prefix..'Обнаружено обновление. Пытаюсь обновиться c '..thisScript().version..' на '..updateversion), color)
+                wait(250)
+                downloadUrlToFile(updatelink, thisScript().path,
+                  function(id3, status1, p13, p23)
+                    if status1 == dlstatus.STATUS_DOWNLOADINGDATA then
+                      print(string.format('Загружено %d из %d.', p13, p23))
+                    elseif status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
+                      print('Загрузка обновления завершена.')
+                      sampAddChatMessage((prefix..'Обновление завершено!'), color)
+                      goupdatestatus = true
+                      lua_thread.create(function() wait(500) thisScript():reload() end)
+                    end
+                    if status1 == dlstatus.STATUSEX_ENDDOWNLOAD then
+                      if goupdatestatus == nil then
+                        sampAddChatMessage((prefix..'Обновление прошло неудачно. Запускаю устаревшую версию..'), color)
+                        update = false
+                      end
+                    end
+                  end
+                )
+                end, prefix
+              )
+            else
+              update = false
+              print('v'..thisScript().version..': Обновление не требуется.')
+            end
+          end
         else
+          print('v'..thisScript().version..': Не могу проверить обновление. Смиритесь или проверьте самостоятельно на '..url)
           update = false
-          ftext(('У вас последняя версия! Обновление не требуется!'), color)
         end
       end
     end
-  end
-end)
-end
-
-function goupdate()
-ftext(('Обнаружено обновление. AutoReload может конфликтовать. Обновляюсь...'), color)
-ftext(('Текущая версия: '..thisScript().version..". Новая версия: "..version), color)
-wait(300)
-downloadUrlToFile(updatelink, thisScript().path, function(id3, status1, p13, p23)
-  if status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
-  ftext(('Обновление завершено!'), color)
-  thisScript():reload()
-end
-end)
+  )
+  while update ~= false do wait(100) end
 end
