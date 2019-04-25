@@ -1,7 +1,7 @@
 script_name("SFA")
 script_description("/SFA - Основная команда.")
 script_version("1.4")
-script_author("Rickot")  
+script_author("Rickot")
 script_dependencies("SAMPFUNCS, SAMP")
 --[[Билиотеки которые будут применяться  после local и перед =, это локальная переменная...
  которая обращается к функции брав нужную либу]]
@@ -26,7 +26,7 @@ jstart = 1 -- jstart это воспроизводная текста при з�
 function main()
   	if not isSampLoaded() or not isSampfuncsLoaded() then return end
 	while not isSampAvailable() do wait(1000) end
-	autoupdate("https://raw.githubusercontent.com/ea3174/SFA/master/SFA.json", '['..string.upper(thisScript().name)..']: ', "http://vk.com/rickot")
+	autoupdate("https://raw.githubusercontent.com/ea3174/Script-For-Admins/master/SFA.json", '['..string.upper(thisScript().name)..']: ', "http://vk.com/rickot")
 --   checkUpdate()
     -- По принту можно понять что ниже проверка сервера
     print("Проверка сервера...")
@@ -671,7 +671,7 @@ color = 0xffffff
 
 function checkUpdate()
   local fpath = os.getenv('TEMP') .. '\\SFA.json'
-  downloadUrlToFile('https://raw.githubusercontent.com/ea3174/SFA/master/SFA.json', fpath, function(id, status, p1, p2)
+  downloadUrlToFile('https://raw.githubusercontent.com/ea3174/Script-For-Admins/master/SFA.json', fpath, function(id, status, p1, p2)
     if status == dlstatus.STATUS_ENDDOWNLOADDATA then
     local f = io.open(fpath, 'r')
     if f then
